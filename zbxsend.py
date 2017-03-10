@@ -60,7 +60,16 @@ def send_to_zabbix(metrics, zabbix_host='127.0.0.1', zabbix_port=10051, timeout=
         if resp.get('response') != 'success':
             logger.error('Got error from Zabbix: %s', resp)
             return False
-        return True
+        else:
+	    info = resp.get('info')
+            info_parsed = {}
+	    for x in  [x.split(':') for x in info.split(';')]:
+	        info_parsed[x[0].strip()] = x[1].strip()
+            if info_parsed['failed'] == '1':
+                logger.error('Got error from Zabbix, failed: 1')
+ 	        return False
+	    elif info_parsed['processed'] == '1':
+	    	return True
     except socket.timeout as e:
         logger.error("zabbix timeout: " + str(e))
         return False
